@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Irrigation Time Calculation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fa;
+    }
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    .form-group {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+      text-align: center;
+    }
+    .form-group label {
+      font-size: 18px;
+    }
+    .form-group input, .form-group select, .form-group button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Irrigation Time Calculation</h1>
+
+    <!-- Form for Irrigation Time Calculation -->
+    <div class="form-group">
+      <label for="cropType">Crop Type:</label>
+      <select id="cropType">
+        <option value="wheat">Wheat</option>
+        <option value="corn">Corn</option>
+        <option value="tomato">Tomato</option>
+        <!-- Add more crops as needed -->
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="sprinklerType">Sprinkler Type:</label>
+      <select id="sprinklerType">
+        <option value="centerPivot">Center Pivot</option>
+        <option value="drip">Drip Irrigation</option>
+        <option value="spray">Spray</option>
+        <!-- Add more sprinkler types as needed -->
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="precipitationRate">Precipitation Rate (mm/hr):</label>
+      <input type="number" id="precipitationRate" placeholder="Enter precipitation rate" />
+    </div>
+
+    <!-- New Field for Sprinkler Diameter -->
+    <div class="form-group">
+      <label for="sprinklerDiameter">Sprinkler Diameter (m):</label>
+      <input type="number" id="sprinklerDiameter" placeholder="Enter sprinkler diameter" />
+    </div>
+
+    <!-- Area for irrigation calculation -->
+    <div class="form-group">
+      <label for="fieldArea">Field Area (m²):</label>
+      <input type="number" id="fieldArea" placeholder="Enter field area" />
+    </div>
+
+    <!-- Button to Calculate Irrigation Time -->
+    <div class="form-group">
+      <button onclick="calculateIrrigationTime()">Calculate Irrigation Time</button>
+    </div>
+
+    <!-- Resulting Irrigation Time -->
+    <div class="form-group">
+      <label for="irrigationTime">Irrigation Time (hours):</label>
+      <input type="text" id="irrigationTime" readonly />
+    </div>
+  </div>
+
+  <script>
+    function calculateIrrigationTime() {
+      // Get input values
+      const cropType = document.getElementById('cropType').value;
+      const sprinklerType = document.getElementById('sprinklerType').value;
+      const precipitationRate = parseFloat(document.getElementById('precipitationRate').value);
+      const sprinklerDiameter = parseFloat(document.getElementById('sprinklerDiameter').value);
+      const fieldArea = parseFloat(document.getElementById('fieldArea').value);
+
+      // Check if inputs are valid
+      if (isNaN(precipitationRate) || isNaN(sprinklerDiameter) || isNaN(fieldArea)) {
+        alert('Please enter valid values for all fields.');
+        return;
+      }
+
+      // Formula for irrigation time calculation based on sprinkler type and other parameters
+      // Assuming a simple formula based on precipitation rate, field area, and sprinkler diameter
+
+      let flowRate = 0;
+
+      // Example: Calculate flow rate based on sprinkler type (you can customize the logic)
+      if (sprinklerType === 'centerPivot') {
+        flowRate = (sprinklerDiameter * precipitationRate) * 1.5; // Example formula for center pivot
+      } else if (sprinklerType === 'drip') {
+        flowRate = (sprinklerDiameter * precipitationRate) * 1.2; // Example formula for drip irrigation
+      } else if (sprinklerType === 'spray') {
+        flowRate = (sprinklerDiameter * precipitationRate) * 1.0; // Example formula for spray irrigation
+      }
+
+      // Calculate irrigation time: Time = Area / Flow rate
+      const irrigationTime = fieldArea / flowRate;
+
+      // Display the result
+      document.getElementById('irrigationTime').value = irrigationTime.toFixed(2); // Round to 2 decimal places
+    }
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robot Irrigation Time Calculation</title>
+  <style>
+    /* التنسيق للصفحة */
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Calculate Irrigation Time for Robot</h1>
+
+    <div class="form-group">
+      <label for="sprinklerFlowRate">Sprinkler Flow Rate (L/min):</label>
+      <input type="number" id="sprinklerFlowRate" placeholder="Enter Sprinkler Flow Rate (L/min)" />
+    </div>
+
+    <div class="form-group">
+      <label for="areaToWater">Area to Water (m²):</label>
+      <input type="number" id="areaToWater" placeholder="Enter Area to Water (m²)" />
+    </div>
+
+    <div class="form-group">
+      <label for="sprinklerCount">Number of Sprinklers:</label>
+      <input type="number" id="sprinklerCount" value="4" />
+    </div>
+
+    <button onclick="calculateIrrigationTime()">Calculate Irrigation Time</button>
+
+    <div class="result" id="result"></div>
+
+    <button onclick="saveData()">Save Data</button>
+  </div>
+
+  <script>
+    function calculateIrrigationTime() {
+      const flowRate = parseFloat(document.getElementById('sprinklerFlowRate').value);
+      const area = parseFloat(document.getElementById('areaToWater').value);
+      const numSprinklers = parseInt(document.getElementById('sprinklerCount').value);
+
+      if (isNaN(flowRate) || isNaN(area) || flowRate <= 0 || area <= 0 || numSprinklers <= 0) {
+        alert("Please enter valid values for flow rate, area, and number of sprinklers.");
+        return;
+      }
+
+      const timePerSprinkler = (area / flowRate).toFixed(2);
+      const adjustedTime = (timePerSprinkler / numSprinklers).toFixed(2);
+
+      document.getElementById('result').innerHTML = `Irrigation Time: ${adjustedTime} minutes (for ${numSprinklers} sprinklers)`;
+    }
+
+    function saveData() {
+      const time = document.getElementById('result').textContent;
+      const flowRate = document.getElementById('sprinklerFlowRate').value;
+      const area = document.getElementById('areaToWater').value;
+      const numSprinklers = document.getElementById('sprinklerCount').value;
+
+      // Save data to LocalStorage
+      localStorage.setItem('irrigationTime', time);
+      localStorage.setItem('flowRate', flowRate);
+      localStorage.setItem('area', area);
+      localStorage.setItem('numSprinklers', numSprinklers);
+
+      alert("Data saved successfully!");
+    }
+  </script>
+
+</body>
+</html>

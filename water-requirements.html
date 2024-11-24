@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Water Requirement Calculation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fa;
+    }
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    .form-group {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+      text-align: center;
+    }
+    .form-group label {
+      font-size: 18px;
+    }
+    .form-group input, .form-group select, .form-group button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Water Requirement Calculation</h1>
+
+    <!-- Form for Water Requirement Calculation -->
+    <div class="form-group">
+      <label for="cropType">Crop Type:</label>
+      <select id="cropType">
+        <option value="wheat">Wheat</option>
+        <option value="corn">Corn</option>
+        <option value="tomato">Tomato</option>
+        <option value="rice">Rice</option>
+        <!-- Add more crops as needed -->
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="cropStage">Crop Stage:</label>
+      <select id="cropStage">
+        <option value="initial">Initial</option>
+        <option value="mid">Mid</option>
+        <option value="late">Late</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="fieldArea">Field Area (m²):</label>
+      <input type="number" id="fieldArea" placeholder="Enter field area in m²" />
+    </div>
+
+    <div class="form-group">
+      <label for="days">Number of Days:</label>
+      <input type="number" id="days" placeholder="Enter number of days" />
+    </div>
+
+    <div class="form-group">
+      <label for="ETo">ETo (Evapotranspiration in mm/day):</label>
+      <input type="number" id="ETo" placeholder="Enter ETo value in mm/day" />
+    </div>
+
+    <!-- Button to Calculate Water Requirement -->
+    <div class="form-group">
+      <button onclick="calculateWaterRequirement()">Calculate Water Requirement</button>
+    </div>
+
+    <!-- Resulting Water Requirement -->
+    <div class="form-group">
+      <label for="waterRequirement">Water Requirement (liters):</label>
+      <input type="text" id="waterRequirement" readonly />
+    </div>
+  </div>
+
+  <script>
+    function calculateWaterRequirement() {
+      // Get input values
+      const cropType = document.getElementById('cropType').value;
+      const cropStage = document.getElementById('cropStage').value;
+      const fieldArea = parseFloat(document.getElementById('fieldArea').value);
+      const days = parseFloat(document.getElementById('days').value);
+      const ETo = parseFloat(document.getElementById('ETo').value);
+
+      // Check if inputs are valid
+      if (isNaN(fieldArea) || isNaN(days) || isNaN(ETo)) {
+        alert('Please enter valid values for all fields.');
+        return;
+      }
+
+      // Define crop coefficient (Kc) values based on crop type and stage
+      let Kc = 0;
+
+      if (cropType === 'wheat') {
+        if (cropStage === 'initial') Kc = 0.5;
+        else if (cropStage === 'mid') Kc = 1.1;
+        else if (cropStage === 'late') Kc = 0.7;
+      } else if (cropType === 'corn') {
+        if (cropStage === 'initial') Kc = 0.7;
+        else if (cropStage === 'mid') Kc = 1.2;
+        else if (cropStage === 'late') Kc = 0.9;
+      } else if (cropType === 'tomato') {
+        if (cropStage === 'initial') Kc = 0.6;
+        else if (cropStage === 'mid') Kc = 1.0;
+        else if (cropStage === 'late') Kc = 0.8;
+      } else if (cropType === 'rice') {
+        if (cropStage === 'initial') Kc = 0.8;
+        else if (cropStage === 'mid') Kc = 1.3;
+        else if (cropStage === 'late') Kc = 1.1;
+      }
+
+      // Calculate ETc (crop evapotranspiration)
+      const ETc = ETo * Kc; // mm/day
+
+      // Convert ETc from mm to liters (1 mm = 1 liter per square meter)
+      const ETcLiters = ETc * fieldArea;
+
+      // Calculate the total water requirement in liters
+      const totalWaterRequirement = ETcLiters * days;
+
+      // Display the result
+      document.getElementById('waterRequirement').value = totalWaterRequirement.toFixed(2); // Round to 2 decimal places
+    }
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Water Needs Calculation</title>
+  <style>
+    /* التنسيق للصفحة */
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Calculate Water Needs</h1>
+
+    <label for="cropType">Crop Type:</label>
+    <input type="text" id="cropType" placeholder="Enter Crop Type" />
+
+    <label for="climateFactor">Climate Factor:</label>
+    <input type="number" id="climateFactor" placeholder="Enter Climate Factor" />
+
+    <button onclick="saveWaterNeeds()">Save Water Needs</button>
+  </div>
+
+  <script>
+    function saveWaterNeeds() {
+      const cropType = document.getElementById('cropType').value;
+      const climateFactor = document.getElementById('climateFactor').value;
+
+      localStorage.setItem('cropType', cropType);
+      localStorage.setItem('climateFactor', climateFactor);
+
+      alert("Water needs data saved successfully!");
+    }
+  </script>
+
+</body>
+</html>
