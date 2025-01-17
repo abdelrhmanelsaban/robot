@@ -57,20 +57,17 @@
     <div class="form-group">
       <label for="cropType">Crop Type:</label>
       <select id="cropType">
-        <option value="wheat">Wheat</option>
-        <option value="corn">Corn</option>
-        <option value="tomato">Tomato</option>
-        <!-- Add more crops as needed -->
+        <option value="grass">Grass</option>
+        <option value="tree">Tree</option>
+        <option value="shrubs">Shrubs</option>
       </select>
     </div>
 
     <div class="form-group">
       <label for="sprinklerType">Sprinkler Type:</label>
       <select id="sprinklerType">
-        <option value="centerPivot">Center Pivot</option>
-        <option value="drip">Drip Irrigation</option>
-        <option value="spray">Spray</option>
-        <!-- Add more sprinkler types as needed -->
+        <option value="Sprayer">Sprayer</option>
+        <option value="Bubbler">Bubbler</option>
       </select>
     </div>
 
@@ -79,24 +76,20 @@
       <input type="number" id="precipitationRate" placeholder="Enter precipitation rate" />
     </div>
 
-    <!-- New Field for Sprinkler Diameter -->
     <div class="form-group">
       <label for="sprinklerDiameter">Sprinkler Diameter (m):</label>
       <input type="number" id="sprinklerDiameter" placeholder="Enter sprinkler diameter" />
     </div>
 
-    <!-- Area for irrigation calculation -->
     <div class="form-group">
       <label for="fieldArea">Field Area (m²):</label>
       <input type="number" id="fieldArea" placeholder="Enter field area" />
     </div>
 
-    <!-- Button to Calculate Irrigation Time -->
     <div class="form-group">
       <button onclick="calculateIrrigationTime()">Calculate Irrigation Time</button>
     </div>
 
-    <!-- Resulting Irrigation Time -->
     <div class="form-group">
       <label for="irrigationTime">Irrigation Time (hours):</label>
       <input type="text" id="irrigationTime" readonly />
@@ -112,28 +105,42 @@
       const sprinklerDiameter = parseFloat(document.getElementById('sprinklerDiameter').value);
       const fieldArea = parseFloat(document.getElementById('fieldArea').value);
 
-      // Check if inputs are valid
-      if (isNaN(precipitationRate) || isNaN(sprinklerDiameter) || isNaN(fieldArea)) {
-        alert('Please enter valid values for all fields.');
+      // Validate inputs
+      if (
+        isNaN(precipitationRate) || precipitationRate <= 0 ||
+        isNaN(sprinklerDiameter) || sprinklerDiameter <= 0 ||
+        isNaN(fieldArea) || fieldArea <= 0
+      ) {
+        alert('Please enter positive values for all fields.');
         return;
       }
 
-      // Formula for irrigation time calculation based on sprinkler type and other parameters
-      // Assuming a simple formula based on precipitation rate, field area, and sprinkler diameter
+      // Calculate sprinkler coverage area (assuming circular area from diameter)
+      const sprinklerCoverageArea = Math.PI * Math.pow(sprinklerDiameter / 2, 2); // Area of a circle (πr²)
 
-      let flowRate = 0;
+      // Apply crop factor based on the selected crop
+      let cropFactor = 1; // Default factor for grass
 
-      // Example: Calculate flow rate based on sprinkler type (you can customize the logic)
-      if (sprinklerType === 'centerPivot') {
-        flowRate = (sprinklerDiameter * precipitationRate) * 1.5; // Example formula for center pivot
-      } else if (sprinklerType === 'drip') {
-        flowRate = (sprinklerDiameter * precipitationRate) * 1.2; // Example formula for drip irrigation
-      } else if (sprinklerType === 'spray') {
-        flowRate = (sprinklerDiameter * precipitationRate) * 1.0; // Example formula for spray irrigation
+      if (cropType === 'tree') {
+        cropFactor = 1.5;  // Trees typically need more water
+      } else if (cropType === 'shrubs') {
+        cropFactor = 1.2;  // Shrubs typically need a bit more water than grass
       }
 
-      // Calculate irrigation time: Time = Area / Flow rate
-      const irrigationTime = fieldArea / flowRate;
+      // Calculate flow rate in liters per hour (L/hr)
+      const flowRate = precipitationRate * sprinklerCoverageArea; // mm/hr * m² = L/hr (since 1 mm = 1 liter per m²)
+
+      // Apply the crop factor to the flow rate
+      const adjustedFlowRate = flowRate * cropFactor;
+
+      // Ensure flow rate is not zero to avoid division errors
+      if (adjustedFlowRate === 0) {
+        alert('Flow rate calculation resulted in zero. Check your inputs.');
+        return;
+      }
+
+      // Calculate irrigation time (hours): Time = Field Area (m²) / Flow Rate (L/hr)
+      const irrigationTime = fieldArea / adjustedFlowRate;
 
       // Display the result
       document.getElementById('irrigationTime').value = irrigationTime.toFixed(2); // Round to 2 decimal places
@@ -142,4 +149,3 @@
 
 </body>
 </html>
-
