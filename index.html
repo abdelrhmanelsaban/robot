@@ -14,7 +14,7 @@
       background-color: #f4f7fa;
     }
     #map {
-      height: 70vh;
+      height: 60vh;
       width: 100%;
     }
     .controls {
@@ -61,10 +61,44 @@
       padding: 5px;
       font-size: 14px;
     }
+    .results-window {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      display: none;
+    }
+    .results-window h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #333;
+    }
+    .results-window p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #555;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .close-btn:hover {
+      background: #cc0000;
+    }
   </style>
 </head>
 <body>
- 
   <div class="controls">
     <label for="plantType">Plant Type:</label>
     <select id="plantType">
@@ -93,12 +127,26 @@
 
   <div id="map"></div>
 
+  <div class="results-window" id="resultsWindow">
+    <button class="close-btn" onclick="closeResultsWindow()">×</button>
+    <h2>Irrigation Results</h2>
+    <p><strong>Plant Type:</strong> <span id="resultPlantType"></span></p>
+    <p><strong>Area Covered:</strong> <span id="resultArea"></span> m²</p>
+    <p><strong>Daily Water Need:</strong> <span id="resultWaterNeed"></span> L</p>
+    <p><strong>Water Flow Rate:</strong> <span id="resultFlowRate"></span> L/min</p>
+    <p><strong>Number of Robot Points:</strong> <span id="resultPoints"></span></p>
+    <p><strong>Irrigation Time per Point:</strong> <span id="resultTimePerPoint"></span> minutes</p>
+    <p><strong>Total Irrigation Time:</strong> <span id="resultTotalTime"></span> minutes</p>
+    <p><strong>First Robot Point:</strong> <span id="resultFirstPoint"></span></p>
+    <p><strong>Last Robot Point:</strong> <span id="resultLastPoint"></span></p>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
   <script>
     // Initialize map
     const map = L.map('map').setView([30.0444, 31.2357], 16); // Default coordinates (Cairo)
-    
+
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -138,6 +186,20 @@
       layer.bindPopup(`Area: ${(area / 1).toFixed(2)} m²`).openPopup();
     });
 
+    // Function to check if a point is inside a polygon
+    function isPointInPolygon(point, polygon) {
+      const x = point.lat, y = point.lng;
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].lat, yi = polygon[i].lng;
+        const xj = polygon[j].lat, yj = polygon[j].lng;
+        const intersect = ((yi > y) !== (yj > y)) &&
+          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
     // Function to calculate irrigation data
     function calculateIrrigation() {
       const plantType = document.getElementById('plantType').value;
@@ -149,9 +211,9 @@
         return;
       }
 
-      // consumption values (L/day) per m² for different plants
+      // Water consumption values (L/day) per m² for different plants
       const waterConsumption = {
-        grass: 5,   // Grass consumes 5 L/day/m²
+        grass: 10,   // Grass consumes 10 L/day/m²
         trees: 10,  // Trees consume 10 L/day/m²
         shrubs: 7   // Shrubs consume 7 L/day/m²
       };
@@ -162,32 +224,16 @@
       const latStep = (sprinklerRadius * 1.2) / 111320; // Convert meters to degrees (latitude) with slight overlap
       const lngStep = (sprinklerRadius * 1.2) / (111320 * Math.cos(bounds.getCenter().lat * (Math.PI / 180))); // Convert meters to degrees (longitude) with slight overlap
 
- // الدالة للتحقق من وجود نقطة داخل مضلع
-function isPointInPolygon(point, polygon) {
-    const x = point.lat, y = point.lng;
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const xi = polygon[i].lat, yi = polygon[i].lng;
-      const xj = polygon[j].lat, yj = polygon[j].lng;
-      const intersect = ((yi > y) !== (yj > y)) &&
-        (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  }
-  
-  const polygonLatLngs = selectedArea.getLatLngs()[0]; // إحداثيات المضلع
+      const polygonLatLngs = selectedArea.getLatLngs()[0]; // إحداثيات المضلع
 
-// توسيع الحدود بشكل أكبر
-for (let lat = bounds.getSouthWest().lat - 0.5 * latStep; lat < bounds.getNorthEast().lat + 0.5* latStep; lat += latStep) {
-  for (let lng = bounds.getSouthWest().lng - 0.5 * lngStep; lng < bounds.getNorthEast().lng + 0.5 * lngStep; lng += lngStep) {
-    const point = L.latLng(lat, lng);
-    console.log("Generated Point:", point); // فحص النقاط المولدة
-    if (isPointInPolygon(point, polygonLatLngs)) {
-      latlngs.push(point);
-    }
-  }
-}
+      for (let lat = bounds.getSouthWest().lat - 0.5 * latStep; lat < bounds.getNorthEast().lat + 0.5 * latStep; lat += latStep) {
+        for (let lng = bounds.getSouthWest().lng - 0.5 * lngStep; lng < bounds.getNorthEast().lng + 0.5 * lngStep; lng += lngStep) {
+          const point = L.latLng(lat, lng);
+          if (isPointInPolygon(point, polygonLatLngs)) {
+            latlngs.push(point);
+          }
+        }
+      }
 
       // Clear previous markers and circles
       drawnItems.clearLayers();
@@ -207,51 +253,40 @@ for (let lat = bounds.getSouthWest().lat - 0.5 * latStep; lat < bounds.getNorthE
       // Calculate irrigation time
       const area = L.GeometryUtil.geodesicArea(selectedArea.getLatLngs()[0]); // Area in m²
       const dailyWaterNeed = area * waterConsumption[plantType]; // Total water need per day
-      const irrigationTime = (dailyWaterNeed / waterFlowRate).toFixed(2); // Irrigation time in minutes
 
-      // Display all data in alert
-      const alertMessage = `
-        Plant Type: ${plantType}
-        Area Covered: ${(area / 1).toFixed(2)} m²
-        Daily Water Need: ${dailyWaterNeed.toFixed(2)} L
-        Water Flow Rate: ${waterFlowRate} L/min
-        Estimated Irrigation Time: ${irrigationTime} minutes
-        First Robot Point: ${firstPoint.lat.toFixed(5)}, ${firstPoint.lng.toFixed(5)}
-        Last Robot Point: ${lastPoint.lat.toFixed(5)}, ${lastPoint.lng.toFixed(5)}
-      `;
-      alert(alertMessage);
+      // Calculate the number of robot points
+      const numberOfPoints = latlngs.length;
 
-      // Send data to Raspberry Pi (example using fetch API)
-      const robotPoints = latlngs.map(point => ({
-        lat: point.lat.toFixed(5),
-        lng: point.lng.toFixed(5)
-      }));
+      // Calculate the area per point
+      const areaPerPoint = area / numberOfPoints;
 
-      const dataToSend = {
-        plantType,
-        sprinklerRadius,
-        waterFlowRate,
-        area: (area / 1).toFixed(2),
-        dailyWaterNeed: dailyWaterNeed.toFixed(2),
-        irrigationTime,
-        robotPoints
-      };
+      // Calculate the water need per point
+      const waterNeedPerPoint = areaPerPoint * waterConsumption[plantType];
 
-      //Send data to Raspberry Pi
-      fetch('http://your-raspberry-pi-ip/endpoint', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSend)
-      })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Data sent to Raspberry Pi:', data);
-        })
-        .catch(error => {
-          console.error('Error sending data to Raspberry Pi:', error);
-        });
+      // Calculate the irrigation time per point
+      const irrigationTimePerPoint = (waterNeedPerPoint / waterFlowRate).toFixed(2);
+
+      // Total irrigation time for all points
+      const totalIrrigationTime = (irrigationTimePerPoint * numberOfPoints).toFixed(2);
+
+      // Display results in the results window
+      document.getElementById('resultPlantType').innerText = plantType;
+      document.getElementById('resultArea').innerText = (area / 1).toFixed(2);
+      document.getElementById('resultWaterNeed').innerText = dailyWaterNeed.toFixed(2);
+      document.getElementById('resultFlowRate').innerText = waterFlowRate;
+      document.getElementById('resultPoints').innerText = numberOfPoints;
+      document.getElementById('resultTimePerPoint').innerText = irrigationTimePerPoint;
+      document.getElementById('resultTotalTime').innerText = totalIrrigationTime;
+      document.getElementById('resultFirstPoint').innerText = `${firstPoint.lat.toFixed(5)}, ${firstPoint.lng.toFixed(5)}`;
+      document.getElementById('resultLastPoint').innerText = `${lastPoint.lat.toFixed(5)}, ${lastPoint.lng.toFixed(5)}`;
+
+      // Show the results window
+      document.getElementById('resultsWindow').style.display = 'block';
+    }
+
+    // Function to close the results window
+    function closeResultsWindow() {
+      document.getElementById('resultsWindow').style.display = 'none';
     }
 
     // Function to search for a location
